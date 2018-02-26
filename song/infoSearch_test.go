@@ -15,23 +15,23 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package cmd
+package song
 
 import (
-	"fmt"
-
-	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-func init() {
-	RootCmd.AddCommand(versionCmd)
-}
+func TestInfoSearchRequest(t *testing.T) {
+	x := map[string]string{"search1": "one", "search2": "two"}
+	y := createInfoSearchRequest(true, x)
+	z := InfoSearchRequest{true, []InfoKey{InfoKey{"search1", "one"}, InfoKey{"search2", "two"}}}
 
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Version number",
-	Long:  `Prints the version of this SONG CLI Application`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("v0.0.1 Alpha")
-	},
+	assert.Equal(t, y, z, "Info search request (true)")
+
+	x = map[string]string{"a": "1", "b": "2"}
+	y = createInfoSearchRequest(false, x)
+	z = InfoSearchRequest{false, []InfoKey{InfoKey{"a", "1"}, InfoKey{"b", "2"}}}
+
+	assert.Equal(t, y, z, "Info search request (false)")
 }

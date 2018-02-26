@@ -1,8 +1,26 @@
+/*
+ *     Copyright (C) 2018  Ontario Institute for Cancer Research
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU Affero General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU Affero General Public License for more details.
+ *
+ *     You should have received a copy of the GNU Affero General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package cmd
 
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/fatih/color"
 	homedir "github.com/mitchellh/go-homedir"
@@ -20,7 +38,6 @@ Please use the configure command, --config option, or --accessToken and --songUR
 
 // RootCmd is the Base Command for CLI Application
 var RootCmd = &cobra.Command{
-	Use:   `song`,
 	Short: `CLI Utility for uploading metadata to a SONG repository`,
 	Long:  `CLI Utility for uploading metadata to a SONG repository`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -59,10 +76,6 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&accessTokenFlag, "accessToken", "", "Provide an access token for authorizing operations to SONG")
 	RootCmd.PersistentFlags().StringVar(&songURLFlag, "songURL", "", "url of SONG server")
 	RootCmd.PersistentFlags().StringVar(&studyFlag, "study", "", "study to operate on")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -71,6 +84,7 @@ func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
+		viper.Set("config", cfgFile)
 	} else {
 		// Find home directory.
 		home, err := homedir.Dir()
@@ -82,6 +96,7 @@ func initConfig() {
 		// Search config in home directory with name ".song" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".song")
+		viper.Set("config", filepath.Join(home, ".song.yaml"))
 	}
 
 	viper.AutomaticEnv() // Read in environment variables that match

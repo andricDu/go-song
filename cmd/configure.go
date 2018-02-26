@@ -1,16 +1,58 @@
+/*
+ *     Copyright (C) 2018  Ontario Institute for Cancer Research
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU Affero General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU Affero General Public License for more details.
+ *
+ *     You should have received a copy of the GNU Affero General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
-	"path"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
+
+var editConfig bool
 
 func init() {
 	RootCmd.AddCommand(configureCmd)
+	configureCmd.Flags().BoolVarP(&editConfig, "edit", "e", false, "Edit configuration")
+}
+
+func doConfigure() {
+	file := viper.GetString("config")
+
+	if editConfig {
+		editConfiguration(file)
+		return
+	}
+
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	fmt.Println("Showing configuration for config file '" + file + "'")
+
+	if len(b) < 1 {
+		fmt.Println("Configuration file does not have any content!")
+	} else {
+		fmt.Println(string(b))
+	}
 }
 
 func check(e error) {
@@ -19,31 +61,9 @@ func check(e error) {
 	}
 }
 
-func verifyPath(fullPath string) {
-	_, err := os.Stat(fullPath)
-	if os.IsNotExist(err) {
-		fmt.Println("No configuration existing configuration file, creating new config.")
-	} else {
-		fmt.Println("Existing configuration found. Type 'y' to continue...")
-		var input string
-		fmt.Scanln(&input)
-		if input != "y" {
-			os.Exit(0)
-		}
-	}
-}
-
-func doConfigure() {
-	home, err := homedir.Dir()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	fullPath := path.Join(home, ".song.yaml")
-	verifyPath(fullPath)
-
-	file, err := os.Create(fullPath)
+func editConfiguration(config string) {
+	fmt.Println("Setting configuration for config file '" + config + "'")
+	file, err := os.Create(config)
 	check(err)
 	defer file.Close()
 
@@ -74,8 +94,8 @@ func doConfigure() {
 
 var configureCmd = &cobra.Command{
 	Use:   "configure",
-	Short: "configures SONG client",
-	Long:  `Sets configuration values in config file.`,
+	Short: "Show/Edit configuration",
+	Long:  `Shows configuration values in config file. Use -e to edit.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		doConfigure()
 	},

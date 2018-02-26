@@ -15,23 +15,41 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package cmd
+package song
 
 import (
-	"fmt"
-
-	"github.com/spf13/cobra"
+	"encoding/json"
 )
 
-func init() {
-	RootCmd.AddCommand(versionCmd)
+type manifestFile struct {
+	Info       map[string]string
+	ObjectId   string
+	AnalysisId string
+	StudyId    string
+	FileName   string
+	FileSize   int64
+	FileType   string
+	FileAccess string
+	FileMd5sum string
 }
 
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Version number",
-	Long:  `Prints the version of this SONG CLI Application`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("v0.0.1 Alpha")
-	},
+func (f *manifestFile) String() string {
+	return f.ObjectId + "\t" + f.FileName + "\t" + f.FileMd5sum
+	return ""
+}
+
+func createManifest(analysisID string, data string) string {
+	var files []manifestFile
+
+	err := json.Unmarshal([]byte(data), &files)
+	if err != nil {
+		panic("Couldn't convert the following JSON string to an array of manifestFile objects: '" + data + "'")
+	}
+
+	manifest := analysisID + "\t\t\n"
+	for _, f := range files {
+		manifest += f.String() + "\n"
+	}
+
+	return manifest
 }
